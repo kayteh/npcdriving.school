@@ -159,7 +159,7 @@ export default function App() {
                   extremely incorrect.
                 </ParagraphMedium>
               ),
-            []
+            [deviceCoords]
           )}
           {!!deviceCoords && (
             <ParagraphMedium>
