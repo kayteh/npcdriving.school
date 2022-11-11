@@ -98,11 +98,9 @@ export default function App() {
 
   const getURL = React.useCallback(() => {
     const terms = search || placeholder;
-    // Detect if mobile
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    // for mobile, generate a maps:// link
-    if (isMobile) {
-      return `maps://?q=${terms}&near=${randomCoords?.latitude},${randomCoords?.longitude}&z=13.75`;
+    // for iOS, generate a maps:// link
+    if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+      return `maps://?q=${terms}&near=${randomCoords?.latitude},${randomCoords?.longitude}&sll=${randomCoords?.latitude},${randomCoords?.longitude}&z=13.75`;
     }
 
     // for desktop, generate a google maps link
@@ -160,8 +158,7 @@ export default function App() {
           </ParagraphMedium>
           {React.useMemo(
             () =>
-              !/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
-              (deviceCoords != null && deviceCoords.accuracy > 25000) ? (
+              deviceCoords != null && deviceCoords.accuracy > 25000 ? (
                 <ParagraphMedium color="gold">
                   <Alert size="scale700" /> Our accuracy on your location looks
                   extremely incorrect.
