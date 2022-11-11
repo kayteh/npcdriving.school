@@ -1,10 +1,12 @@
 import { styled, useStyletron } from "baseui";
-import { AppNavBar } from "baseui/app-nav-bar";
 import { Button } from "baseui/button";
-import { ArrowRight, Search } from "baseui/icon";
+import { Alert, ArrowRight, Check, Search } from "baseui/icon";
 import { Input } from "baseui/input";
-import { DisplayXSmall, ParagraphSmall } from "baseui/typography";
+import { DisplayXSmall, ParagraphMedium } from "baseui/typography";
 import React from "react";
+
+const LAT_MAX = 25 / 111; // 0.225
+const LONG_MAX = 25 / 111.321;
 
 const Centered = styled("div", {
   display: "flex",
@@ -28,6 +30,36 @@ const Info = styled("span", {
 export default function App() {
   const [css] = useStyletron();
   const [search, setSearch] = React.useState("");
+  const [deviceCoords, setDeviceCoords] =
+    React.useState<GeolocationCoordinates | null>(null);
+
+  const getLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        setDeviceCoords(position.coords);
+        localStorage.setItem("has_authorized", "true");
+      });
+    }
+  };
+
+  React.useEffect(() => {
+    if (localStorage.getItem("has_authorized") === "true") {
+      getLocation();
+    }
+  }, []);
+
+  const randomCoords = React.useMemo(() => {
+    if (!deviceCoords) {
+      return null;
+    }
+
+    const latDelta = Math.random() * LAT_MAX * 2 - 1;
+    const longDelta = Math.random() * LONG_MAX * 2 - 1;
+    const latitude = deviceCoords?.latitude + latDelta;
+    const longitude = deviceCoords?.longitude + longDelta;
+    return { latitude, longitude };
+  }, [deviceCoords]);
+
   const placeholder = React.useMemo(() => {
     const list: string[] = [
       "McDonald's",
@@ -54,46 +86,88 @@ export default function App() {
     return list[Math.floor(Math.random() * list.length)];
   }, []);
 
+  const getURL = React.useCallback(() => {
+    const terms = search || placeholder;
+    // Detect if mobile
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    // for mobile, generate a maps:// link
+    if (isMobile) {
+      return `maps://?q=${terms}&near=${randomCoords?.latitude},${randomCoords?.longitude}&z=13.75`;
+    }
+
+    // for desktop, generate a google maps link
+    return `https://www.google.com/maps/search/${terms}/@${
+      randomCoords?.latitude || ""
+    },${randomCoords?.longitude || ""},13.75z`;
+  }, [search, placeholder, randomCoords]);
+
   return (
     <>
-      <AppNavBar title={"NPC Driving School"} />
       <Centered>
         <Wide>
           <DisplayXSmall marginBottom="scale500" marginTop="scale500">
             Where should I send you?
           </DisplayXSmall>
-        </Wide>
-        <Wide className={css({ display: "flex" })}>
-          <Input
-            value={search}
-            placeholder={placeholder}
-            onChange={(e) => setSearch(e.target.value)}
-            endEnhancer={() => <Search />}
-          />
-          <Button
-            $as="a"
-            href={`maps://?q=${search || placeholder}`}
-            endEnhancer={() => <ArrowRight />}
-          >
-            Navigate
-          </Button>
-        </Wide>
-        <Wide>
-          <ParagraphSmall>
+          <ParagraphMedium>
             NPC Driving School will randomly pick a map destination based on
             your search. You'll get a Google Maps or Apple Maps link to follow.
-          </ParagraphSmall>
-          <ParagraphSmall>
+          </ParagraphMedium>
+        </Wide>
+        {!!deviceCoords ? (
+          <Wide className={css({ display: "flex" })}>
+            <Input
+              value={search}
+              placeholder={placeholder}
+              onChange={(e) => setSearch(e.target.value)}
+              endEnhancer={() => <Search />}
+            />
+            <Button $as="a" href={getURL()} endEnhancer={() => <ArrowRight />}>
+              Navigate
+            </Button>
+          </Wide>
+        ) : (
+          <Wide>
+            <ParagraphMedium>
+              Please let us get your device's location, it'll make this work
+              better.
+            </ParagraphMedium>
+            <Button endEnhancer={() => <Check />} onClick={() => getLocation()}>
+              Authorize Location Data
+            </Button>
+          </Wide>
+        )}
+        <Wide>
+          <ParagraphMedium>
             Destinations will be within{" "}
             <Info title="In other words, it doesn't take roads in account.">
-              15 miles (as the crow flies)
+              15mi/25km (as the crow flies)
             </Info>{" "}
             of your location. It's recommended to turn off highways and tolls.
-          </ParagraphSmall>
-          <ParagraphSmall>
+          </ParagraphMedium>
+          <ParagraphMedium>
             Use this app at your own risk. Be safe. Don't drive intoxicated. Be
             aware of your surroundings, and don't drive distracted.
-          </ParagraphSmall>
+          </ParagraphMedium>
+          {React.useMemo(
+            () =>
+              /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
+              (deviceCoords != null && deviceCoords.accuracy < 25000) ? (
+                <></>
+              ) : (
+                <ParagraphMedium color="gold">
+                  <Alert size="scale700" /> Our accuracy on your location looks
+                  extremely incorrect.
+                </ParagraphMedium>
+              ),
+            []
+          )}
+          {!!deviceCoords && (
+            <ParagraphMedium>
+              We think you're at {deviceCoords.latitude},
+              {deviceCoords.longitude} (accurate to{" "}
+              {Math.round(deviceCoords.accuracy)} meters)
+            </ParagraphMedium>
+          )}
         </Wide>
       </Centered>
     </>

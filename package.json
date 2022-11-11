@@ -9,6 +9,7 @@
     "test": "react-scripts test"
   },
   "dependencies": {
+    "@googlemaps/js-api-loader": "^1.15.1",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3",
@@ -26,6 +27,7 @@
     "web-vitals": "^3.0.4"
   },
   "devDependencies": {
+    "@types/google.maps": "^3.50.5",
     "prettier": "^2.7.1",
     "prettier-plugin-organize-imports": "^3.2.0",
     "prettier-plugin-pkg": "^0.17.1"
