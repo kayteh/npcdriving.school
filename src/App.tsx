@@ -98,15 +98,7 @@ export default function App() {
 
   const getURL = React.useCallback(() => {
     const terms = search || placeholder;
-    // for iOS, generate a maps:// link
-    if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-      return `maps://?q=${terms}&near=${randomCoords?.latitude},${randomCoords?.longitude}&sll=${randomCoords?.latitude},${randomCoords?.longitude}&z=13.75`;
-    }
-
-    // for desktop, generate a google maps link
-    return `https://www.google.com/maps/search/${terms}/@${
-      randomCoords?.latitude || ""
-    },${randomCoords?.longitude || ""},13.75z`;
+    return `https://maps.apple.com?q=${terms}&near=${randomCoords?.latitude},${randomCoords?.longitude}&sll=${randomCoords?.latitude},${randomCoords?.longitude}&z=13.75`;
   }, [search, placeholder, randomCoords]);
 
   return (
