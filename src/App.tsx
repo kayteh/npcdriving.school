@@ -5,8 +5,8 @@ import { Input } from "baseui/input";
 import { DisplayXSmall, ParagraphMedium } from "baseui/typography";
 import React from "react";
 
-const LAT_MAX = 25 / 111; // 0.225
-const LONG_MAX = 25 / 111.321;
+const LAT_MAX = 0.225;
+const LONG_MAX = 0.223;
 
 const Centered = styled("div", {
   display: "flex",
@@ -53,10 +53,20 @@ export default function App() {
       return null;
     }
 
-    const latDelta = Math.random() * LAT_MAX * 2 - 1;
-    const longDelta = Math.random() * LONG_MAX * 2 - 1;
+    const latDelta = LAT_MAX * (Math.random() * 2 - 1);
+    const longDelta = LONG_MAX * (Math.random() * 2 - 1);
     const latitude = deviceCoords?.latitude + latDelta;
     const longitude = deviceCoords?.longitude + longDelta;
+    console.log({
+      latDelta,
+      longDelta,
+      latitude,
+      longitude,
+      longDiff: Math.abs(longitude - deviceCoords?.longitude),
+      latDiff: Math.abs(latitude - deviceCoords?.latitude),
+      LAT_MAX,
+      LONG_MAX,
+    });
     return { latitude, longitude };
   }, [deviceCoords]);
 
@@ -150,22 +160,23 @@ export default function App() {
           </ParagraphMedium>
           {React.useMemo(
             () =>
-              /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
-              (deviceCoords != null && deviceCoords.accuracy < 25000) ? (
-                <></>
-              ) : (
+              !/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
+              (deviceCoords != null && deviceCoords.accuracy > 25000) ? (
                 <ParagraphMedium color="gold">
                   <Alert size="scale700" /> Our accuracy on your location looks
                   extremely incorrect.
                 </ParagraphMedium>
-              ),
+              ) : null,
             [deviceCoords]
           )}
           {!!deviceCoords && (
             <ParagraphMedium>
               We think you're at {deviceCoords.latitude},
               {deviceCoords.longitude} (accurate to{" "}
-              {Math.round(deviceCoords.accuracy)} meters)
+              {Math.round(deviceCoords.accuracy)} meters).
+              <br />
+              We'll base results around {randomCoords?.latitude},
+              {randomCoords?.longitude}.
             </ParagraphMedium>
           )}
         </Wide>
